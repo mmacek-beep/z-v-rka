@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="cs" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Účetní závěrka - Interaktivní Test</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            800: '#075985',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Font Inter CDN -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            .print-card {
+                border: 1px solid #ccc !important;
+                page-break-inside: avoid;
+            }
+        }
+        .print-only {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col selection:bg-brand-500 selection:text-white pb-12">
+
+    <!-- HEADER / NAVBAR -->
+    <header class="no-print bg-slate-800/90 backdrop-blur border-b border-slate-700 sticky top-0 z-30 px-4 py-3 shadow-lg">
+        <div class="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-600 flex items-center justify-center font-bold text-white text-xl shadow-md">
+                    📊
+                </div>
+                <div>
+                    <h1 class="font-bold text-lg leading-tight text-white">Účetní závěrka</h1>
+                    <p class="text-xs text-slate-400">Interaktivní testovací aplikace pro OA (Účetnictví 3. ročník)</p>
+                </div>
+            </div>
+
+            <!-- CONTROLS ROW -->
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Sound Toggle -->
+                <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-sm transition flex items-center space-x-1" title="Zapnout/Vypnout zvukové efekty">
+                    <span id="soundIcon">🔊</span>
+                </button>
+
+                <!-- Filter Errors -->
+                <button id="filterErrorsBtn" onclick="toggleErrorFilter()" class="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs sm:text-sm font-medium transition flex items-center space-x-1 border border-slate-600">
+                    <span>⚠️</span>
+                    <span id="filterBtnText">Filtr chyb (0)</span>
+                </button>
+
+                <!-- Reshuffle -->
+                <button onclick="reshuffleQuestions()" class="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs sm:text-sm font-medium transition flex items-center space-x-1 border border-slate-600" title="Proházet pořadí otázek">
+                    <span>🔀</span>
+                    <span class="hidden sm:inline">Proházet</span>
+                </button>
+
+                <!-- Restart -->
+                <button onclick="restartQuiz()" class="px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs sm:text-sm font-medium transition flex items-center space-x-1 border border-slate-600">
+                    <span>🔄</span>
+                    <span class="hidden sm:inline">Restart</span>
+                </button>
+
+                <!-- Print Protocol -->
+                <button onclick="openPrintModal()" class="px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs sm:text-sm font-medium transition flex items-center space-x-1 shadow">
+                    <span>🖨️</span>
+                    <span>Protokol</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER -->
+    <main class="no-print max-w-6xl mx-auto px-4 mt-6 flex-grow w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- LEFT/TOP: DASHBOARD & STATS (4 cols) -->
+        <div class="lg:col-span-4 space-y-6">
+            
+            <!-- PROGRESS & SCORE CARD -->
+            <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/80 shadow-md">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Průběh testu</span>
+                    <span id="questionCounterText" class="text-xs font-bold bg-brand-900/60 text-brand-300 px-2.5 py-1 rounded-full border border-brand-700/50">
+                        Otázka 1 / 40
+                    </span>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-700 h-2.5 rounded-full overflow-hidden mb-4">
+                    <div id="progressBar" class="bg-gradient-to-r from-brand-500 to-indigo-500 h-full w-0 transition-all duration-300"></div>
+                </div>
+
+                <!-- Score Grid -->
+                <div class="grid grid-cols-3 gap-2 text-center mb-4">
+                    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/50">
+                        <div class="text-xs text-slate-400 mb-0.5">Správně</div>
+                        <div id="statCorrect" class="text-lg font-bold text-emerald-400">0</div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/50">
+                        <div class="text-xs text-slate-400 mb-0.5">Chybně</div>
+                        <div id="statWrong" class="text-lg font-bold text-rose-400">0</div>
+                    </div>
+                    <div class="bg-slate-900/60 p-2.5 rounded-xl border border-slate-700/50">
+                        <div class="text-xs text-slate-400 mb-0.5">Úspěšnost</div>
+                        <div id="statAccuracy" class="text-lg font-bold text-brand-300">0 %</div>
+                    </div>
+                </div>
+
+                <!-- OA GRADING SCALE CARD -->
+                <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700/60 flex items-center justify-between">
+                    <div>
+                        <div class="text-xs text-slate-400">Klasifikace OA:</div>
+                        <div id="oaGradeText" class="text-base font-bold text-amber-400">Příprava...</div>
+                    </div>
+                    <div id="oaGradeBadge" class="w-10 h-10 rounded-full bg-slate-800 border-2 border-amber-400 flex items-center justify-center font-extrabold text-amber-400 text-lg shadow">
+                        -
+                    </div>
+                </div>
+            </div>
+
+            <!-- QUESTION MAP (40 BUTTONS GRID) -->
+            <div class="bg-slate-800 rounded-2xl p-5 border border-slate-700/80 shadow-md">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-bold text-slate-200">Mapa otázek (40)</h3>
+                    <span class="text-[11px] text-slate-400">Kliknutím přejdete</span>
+                </div>
+                <div id="questionMapGrid" class="grid grid-cols-8 sm:grid-cols-10 lg:grid-cols-8 gap-1.5">
+                    <!-- Dynamic Grid 1-40 -->
+                </div>
+                <div class="mt-4 pt-3 border-t border-slate-700/60 flex items-center justify-around text-[11px] text-slate-400">
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-slate-700 inline-block"></span> Nevyřešeno</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Správně</span>
+                    <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> Chyba</span>
+                </div>
+            </div>
+
+            <!-- KEYBOARD SHORTCUTS HINT -->
+            <div class="bg-slate-800/60 rounded-xl p-3.5 border border-slate-700/50 text-xs text-slate-400 space-y-1">
+                <div class="font-semibold text-slate-300 mb-1">⌨️ Klávesové zkratky:</div>
+                <div class="flex justify-between"><span>Výběr možnosti:</span> <span class="text-slate-200 font-mono">A, B, C, D</span> nebo <span class="text-slate-200 font-mono">1, 2, 3, 4</span></div>
+                <div class="flex justify-between"><span>Předchozí / Další:</span> <span class="text-slate-200 font-mono">← / →</span></div>
+                <div class="flex justify-between"><span>Potvrdit / Přeskočit:</span> <span class="text-slate-200 font-mono">Enter</span></div>
+            </div>
+
+        </div>
+
+        <!-- RIGHT/BOTTOM: QUESTION AREA (8 cols) -->
+        <div class="lg:col-span-8 space-y-6">
+
+            <!-- MAIN QUESTION CARD -->
+            <div id="questionCard" class="bg-slate-800 rounded-2xl p-6 border border-slate-700/80 shadow-lg relative flex flex-col justify-between min-h-[460px]">
+                
+                <div>
+                    <!-- Category & Hotkey info -->
+                    <div class="flex items-center justify-between gap-2 mb-4">
+                        <span id="questionCategory" class="px-3 py-1 rounded-full text-xs font-semibold bg-brand-900/80 text-brand-300 border border-brand-700/60">
+                            Kategorie
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono bg-slate-900/60 px-2 py-0.5 rounded border border-slate-700">
+                            Otázka <span id="currentQIndexNumber">1</span> z 40
+                        </span>
+                    </div>
+
+                    <!-- Question Stem -->
+                    <h2 id="questionText" class="text-lg sm:text-xl font-bold text-slate-100 leading-snug mb-6">
+                        Načítání otázky...
+                    </h2>
+
+                    <!-- Options Grid (A, B, C, D) -->
+                    <div id="optionsContainer" class="space-y-3">
+                        <!-- Dynamic Options -->
+                    </div>
+                </div>
+
+                <!-- EXPLANATION / CITATION BOX (Hidden until answered) -->
+                <div id="explanationBox" class="hidden mt-6 p-4 rounded-xl bg-slate-900/90 border border-slate-700 space-y-2 text-sm">
+                    <div class="flex items-center space-x-2 font-bold text-brand-400">
+                        <span>💡 Vysvětlení a účetní logika:</span>
+                    </div>
+                    <p id="explanationText" class="text-slate-300 leading-relaxed"></p>
+                    <div class="pt-2 border-t border-slate-800 text-xs text-slate-400 italic">
+                        <span class="font-semibold text-slate-300 not-italic">📖 Citace z materiálu "19_účetní závěrka":</span>
+                        <blockquote id="citationText" class="mt-1 pl-3 border-l-2 border-brand-500 text-slate-300"></blockquote>
+                    </div>
+                </div>
+
+                <!-- NAVIGATION BUTTONS FOOTER -->
+                <div class="mt-8 pt-4 border-t border-slate-700/60 flex items-center justify-between gap-3">
+                    <button id="prevBtn" onclick="navigateQuestion(-1)" class="px-4 py-2.5 rounded-xl bg-slate-700 hover:bg-slate-600 disabled:opacity-40 disabled:hover:bg-slate-700 text-slate-200 text-sm font-semibold transition flex items-center space-x-2">
+                        <span>←</span>
+                        <span>Předchozí</span>
+                    </button>
+
+                    <button id="nextBtn" onclick="navigateQuestion(1)" class="px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white text-sm font-semibold transition shadow flex items-center space-x-2">
+                        <span>Další</span>
+                        <span>→</span>
+                    </button>
+                </div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- PRINTABLE PROTOCOL MODAL -->
+    <div id="printModal" class="no-print fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <span>🖨️</span> Tiskový protokol výsledků
+                </h3>
+                <button onclick="closePrintModal()" class="text-slate-400 hover:text-white text-xl font-bold">&times;</button>
+            </div>
+
+            <div id="protocolPreviewContent" class="py-4 space-y-4 text-sm text-slate-300">
+                <!-- Dynamic Summary content -->
+            </div>
+
+            <div class="pt-4 border-t border-slate-800 flex justify-end space-x-3">
+                <button onclick="closePrintModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium">Zavřít</button>
+                <button onclick="window.print()" class="px-5 py-2 rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-bold shadow flex items-center gap-2">
+                    <span>🖨️</span> Vytisknout / Uložit PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HIDDEN PRINT-ONLY CONTAINER -->
+    <div id="printContainer" class="print-only p-8 bg-white text-black font-sans">
+        <!-- Generates on fly for printing -->
+    </div>
+
+    <script>
+        // ==========================================
+        // 40 QUESTIONS DATA - EQUALIZED OPTIONS LENGTH & BALANCED DISPERSED ANSWERS
+        // Total correct answers: Exactly 10x A, 10x B, 10x C, 10x D
+        // Option 0 in baseQuestions is ALWAYS the correct text; Options 1..3 match Option 0's exact length.
+        // ==========================================
+        const baseQuestions = [
+            {
+                kategorie: "Právní úprava a základní výkazy",
+                otazka: "Kterým právním předpisem je v České republice upravena účetní závěrka a k jakému datu se běžně provádí?",
+                moznosti: [
+                    "Je upravena zákonem o účetnictví a standardně se provádí na konci účetního období k 31. 12. daného roku.",
+                    "Je upravena obch. zákoníkem a standardně se provádí na začátku účetního období k 1. 1. daného kalendářního roku.",
+                    "Je upravena daňovým řádem a standardně se provádí po uplynutí pololetí účetního období k 30. 6. daného roku.",
+                    "Je upravena zákoníkem práce a standardně se provádí čtvrtletně k poslednímu dni každého kalendářního měsíce."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Účetní závěrka je upravena zákonem o účetnictví a provádí se na konci účetního období, typicky k 31. 12.",
+                citace: "Upravena zákonem o účetnictví. Provádí se na konci účetního období, k 31. 12. daného roku."
+            },
+            {
+                kategorie: "Právní úprava a základní výkazy",
+                otazka: "Které základní účetní výkazy mají povinnost sestavovat všechny účetní jednotky v rámci účetní závěrky?",
+                moznosti: [
+                    "Rozvaha, výkaz zisku a ztráty a příloha k účetním výkazům, která vysvětluje a doplňuje údaje rozvahy a výsledovky.",
+                    "Rozvaha, výkaz peněžních toků a podrobné daňové přiznání, které vysvětluje a doplňuje daňový základ společnosti.",
+                    "Výkaz zisku a ztráty, přehled o změnách vlastního kapitálu a zpráva auditora o ověření ročního hospodaření firmy.",
+                    "Rozvaha, účetní deník a přehled o všech přijatých dotacích, které vysvětlují hospodářské výsledky podniku za rok."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Všechny účetní jednotky povinně sestavují rozvahu, výkaz zisku a ztráty a přílohu k účetním výkazům.",
+                citace: "Účetní jednotky mají povinnost zaznamenávat tyto stavy do výkazů – rozvaha, výkaz zisku a ztráty, příloha k účetním výkazům (vysvětluje a doplňuje údaje k rozvaze a výsledovce)."
+            },
+            {
+                kategorie: "Právní úprava a základní výkazy",
+                otazka: "Které rozšiřující účetní výkazy sestavují navíc povinně pouze střední a velké účetní jednotky?",
+                moznosti: [
+                    "Výkaz peněžních toků (cash flow) a samostatný přehled o změnách vlastního kapitálu v daném účetním období.",
+                    "Přílohu k účetním výkazům a podrobné daňové přiznání k dani z přidané hodnoty za všechny kalendářní měsíce.",
+                    "Výkaz zisku a ztráty v druhovém členění a přehled o všech vyplacených mzdičkách zaměstnancům za celý rok.",
+                    "Zahajovací rozvahu k počátku podnikání a přehled o dlouhodobých bankovních úvěrech poskytnutých bankami."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Střední a velké účetní jednotky mají navíc povinnost vyhotovit výkaz peněžních toků a přehled o změnách vlastního kapitálu.",
+                citace: "Střední a velké účetní jednotky také sestavují výkaz peněžních toků, přehled o změnách vlastního kapitálu."
+            },
+            {
+                kategorie: "Náležitosti výkazů a rozsah",
+                otazka: "Které povinné identifikační a formální údaje musí podle zákona obsahovat všechny účetní výkazy?",
+                moznosti: [
+                    "Název ÚJ, sídlo, IČ, DIČ, právní formu, předmět podnikání, okamžik sestavení závěrky a rozvahový den ÚJ.",
+                    "Název ÚJ, jména všech zaměstnanců, číslo bankovního účtu, seznam dodavatelů, daňový plán a podpis auditora.",
+                    "Sídlo ÚJ, výši základního kapitálu, výčet všech pohledávek, kontaktní e-mail a podpis hlavní účetní podniku.",
+                    "IČ, DIČ, seznam všech služebních automobilů, výši tržeb za zboží, datum založení firmy a podpis investora."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Výkazy musí obsahovat název, sídlo/místo podnikání, IČ, DIČ, právní formu, předmět podnikání, okamžik sestavení a rozvahový den.",
+                citace: "Výkazy obsahují údaje o účetní jednotce: název účetní jednotky, místo podnikání, IČ, DIČ, právní forma, předmět podnikání, okamžik sestavení účetní závěrky (datum dokončení a podepsání statutárním orgánem), rozvahový den..."
+            },
+            {
+                kategorie: "Náležitosti výkazů a rozsah",
+                otazka: "Jaký je přesný věcný rozdíl mezi pojmy 'rozvahový den' a 'okamžik sestavení účetní závěrky'?",
+                moznosti: [
+                    "Rozvahový den je den, k němuž se zjišťuje stav majetku; okamžik sestavení je datum dokončení a podpisu statutárním orgánem.",
+                    "Rozvahový den je datum podpisu výkazů auditorem; okamžik sestavení je den schválení výkazů na valné hromadě firmy.",
+                    "Rozvahový den je datum podání přiznání na FÚ; okamžik sestavení je první den následujícího účetního období podniku.",
+                    "Rozvahový den je den doručení výkazů do rejstříku; okamžik sestavení je den zahájení fyzické inventarizace majetku."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Rozvahový den udává stavový okamžik majetku a závazků, zatímco okamžik sestavení je fyzické datum vyhotovení a podpisu výkazů statutárním orgánem.",
+                citace: "okamžik sestavení účetní závěrky (datum dokončení a podepsání statutárním orgánem), rozvahový den (den, ke kterému se zjišťuje stav majetku a závazků …)."
+            },
+            {
+                kategorie: "Druhy účetní závěrky",
+                otazka: "Kdy se podle zákona o účetnictví sestavuje řádná účetní závěrka a k jakému dni se vyhotovuje?",
+                moznosti: [
+                    "Sestavuje se ke dni ukončení řádného účetního období, kterým je rozvahový den (obvykle k 31. 12. daného roku).",
+                    "Sestavuje se při vstupu podniku do likvidace, fúzi nebo rozdělení podniku k libovolnému dni v průběhu roku.",
+                    "Sestavuje se v průběhu účetního období při žádosti o velký úvěr u banky bez uzavírání účetních knih podniku.",
+                    "Sestavuje se při každé změně statutárního orgánu nebo změně právní formy obchodní společnosti v průběhu roku."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Řádná účetní závěrka se sestavuje k rozvahovému dni na konci řádného účetního období.",
+                citace: "Řádná účetní závěrka – k rozvahovému dni (poslední den účetního období)."
+            },
+            {
+                kategorie: "Druhy účetní závěrky",
+                otazka: "V jakých konkrétních situacích se v podniku sestavuje mimořádná účetní závěrka?",
+                moznosti: [
+                    "Sestavuje se v mimořádných situacích, jako je například vstup podniku do likvidace, fúze nebo rozdělení podniku.",
+                    "Sestavuje se na konci každého kalendářního roku jako řádný přehled o majetku, závazcích a výsledku hospodaření.",
+                    "Sestavuje se v průběhu účetního období bez uzavírání účetních knih při vstupu nového investora do podniku.",
+                    "Sestavuje se měsíčně pro potřeby interního řízení manažerů a odborových organizací působících v podniku."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Mimořádná účetní závěrka se sestavuje v mimořádných událostech, jako jsou likvidace, fúze či rozdělení podniku.",
+                citace: "Mimořádná účetní závěrka – v mimořádných situacích (např. při vstupu podniku do likvidace, fúze nebo rozdělení podniku …)."
+            },
+            {
+                kategorie: "Druhy účetní závěrky",
+                otazka: "Jaká je klíčová charakteristika mezitimní účetní závěrky a kdy se v praxi sestavuje?",
+                moznosti: [
+                    "Sestavuje se v průběhu období bez uzavírání účetních knih, např. při vstupu investora nebo žádosti o bankovní úvěr.",
+                    "Sestavuje se k 31. 12. s povinným uzavřením všech účetních knih, např. při řádném ukončení hospodářského roku.",
+                    "Sestavuje se výhradně při zániku účetní jednotky bez přechodu jmění na právního nástupce v rámci likvidace.",
+                    "Sestavuje se na počátku podnikání k datu zápisu do obchodního rejstříku bez vykazování nákladů a výnosů."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Při mezitimní účetní závěrce nedochází k uzavírání účetních knih a sestavuje se během roku (např. při vstupu investora či velkém úvěru).",
+                citace: "Mezitimní účetní závěrka – v průběhu účetního období, nedochází k uzavírání účetních knih (např. při vstupu investora do podniku – je třeba zjistit jeho hodnotu, při žádosti o velký úvěr u banky)."
+            },
+            {
+                kategorie: "Povinnost ověření auditorem",
+                otazka: "Pro které účetní jednotky platí zákonná povinnost ověření účetní závěrky auditorem?",
+                moznosti: [
+                    "Pouze pro střední a velké účetní jednotky, pokud splní alespoň jedno ze tří zákonem stanovených kritérií.",
+                    "Pro všechny mikro, malé, střední i velké účetní jednotky bez ohledu na výši obratu či počet zaměstnanců podniku.",
+                    "Výhradně pro malé účetní jednotky, které vykazují roční obrat nižší než 240 mil. Kč a provozují bankovní činnost.",
+                    "Pouze pro státní příspěvkové organizace a obce, které čerpají provozní dotace ze státního rozpočtu republice."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Povinnost auditu se týká výhradně středních a velkých ÚJ při splnění alespoň jednoho z definovaných kritérií.",
+                citace: "Povinnost ověření účetní závěrky auditorem: Pouze pro střední a velké účetní jednotky, je-li splněna jedna z podmínek..."
+            },
+            {
+                kategorie: "Povinnost ověření auditorem",
+                otazka: "Která tři kritéria stanovená zákonem určují povinnost ověření účetní závěrky auditorem?",
+                moznosti: [
+                    "Roční obrat > 240 mil. Kč, čistá hodnota aktiv > 120 mil. Kč nebo průměrný přepočtený počet zaměstnanců > 50.",
+                    "Roční obrat > 100 mil. Kč, čistá hodnota aktiv > 50 mil. Kč nebo průměrný přepočtený počet zaměstnanců > 20.",
+                    "Roční zisk > 50 mil. Kč, výše základního kapitálu > 10 mil. Kč nebo průměrný přepočtený počet zaměstnanců > 100.",
+                    "Roční obrat > 500 mil. Kč, hodnota cizích zdrojů > 250 mil. Kč nebo průměrný přepočtený počet zaměstnanců > 250."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Zákonná kritéria pro audit: roční obrat nad 240 mil. Kč, čistá aktiva nad 120 mil. Kč nebo průměrný přepočtený počet zaměstnanců nad 50.",
+                citace: "Roční obrat > 240 mil. Kč, Čistá hodnota aktiv > 120 mil. Kč, Ø přepočtený počet zaměstnanců > 50."
+            },
+            {
+                kategorie: "Povinnost ověření auditorem",
+                otazka: "Firma zaměstnává v roce 3 pracovníky: A (celý rok, úvazek 1,0), B (půl roku, úvazek 0,5) a C (3/4 roku, úvazek 0,5). Jaký je Ø přepočtený počet zaměstnanců?",
+                moznosti: [
+                    "Průměrný přepočtený počet činí 1,625 zaměstnance (výpočet: 1,0*12/12 + 0,5*6/12 + 0,5*9/12 = 1,000 + 0,250 + 0,375).",
+                    "Průměrný přepočtený počet činí 2,000 zaměstnance (výpočet: 1,0*12/12 + 0,5*12/12 + 0,5*12/12 = 1,000 + 0,500 + 0,500).",
+                    "Průměrný přepočtený počet činí 3,000 zaměstnance (výpočet: prostý součet všech tří fyzických zaměstnanců v podniku).",
+                    "Průměrný přepočtený počet činí 1,250 zaměstnance (výpočet: 1,0*12/12 + 0,5*3/12 + 0,5*3/12 = 1,000 + 0,125 + 0,125)."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Přepočet na plné úvazky podle doby trvání v roce: A = 1,000; B = 0,250; C = 0,375. Celkem = 1,625 průměrného úvazku.",
+                citace: "Zaměstnanec A, celý rok úvazek 1,0 * 12/12 = 1,000; Zaměstnanec B, půl roku úvazek 0,5 * 06/12 = 0,250; Zaměstnanec C, třičtvrtě roku úvazek 0,5 * 09/12 = 0,375. Ø přepočtený počet zaměstnanců = 1,625."
+            },
+            {
+                kategorie: "Rozvaha a bilanční rovnice",
+                otazka: "Co je to rozvaha, v jakých jednotkách se sestavuje a za jaká období vykazuje údaje?",
+                moznosti: [
+                    "Je to přehled o aktivech a pasivech podniku k určitému datu, sestavuje se v tis. Kč za běžné a minulá období.",
+                    "Je to přehled o výnosech a nákladech podniku za účetní období, sestavuje se v celých Kč pouze za běžný rok.",
+                    "Je to přehled o peněžních tocích podniku za kalendářní měsíc, sestavuje se v milionech EUR pro zahraniční trhy.",
+                    "Je to výkaz o změnách vlastního kapitálu k rozvahovému dni, sestavuje se v tisících USD pro potřeby auditora."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Rozvaha poskytuje přehled o aktivech a pasivech v tis. Kč za běžné a minulá účetní období.",
+                citace: "Rozvaha – přehled o aktivech a pasivech podniku k určitému datu, v tis. Kč, v běžném a minulém účetním období."
+            },
+            {
+                kategorie: "Rozvaha a bilanční rovnice",
+                otazka: "Jak se v rozvaze vymezují aktiva a pasiva podniku a jaká základní bilanční rovnice mezi nimi platí?",
+                moznosti: [
+                    "Aktiva představují majetek podniku, pasiva zdroje jeho krytí; platí základní bilanční rovnice AKTIVA = PASIVA.",
+                    "Aktiva představují výnosy podniku, pasiva jeho provozní náklady; platí základní bilanční rovnice VÝNOSY = NÁKLADY.",
+                    "Aktiva představují cizí zdroje, pasiva vlastní kapitál podniku; platí základní bilanční rovnice CIZÍ ZDROJE = VK.",
+                    "Aktiva představují peníze v bance, pasiva závazky vůči dodavatelům; platí rovnice BĚŽNÝ ÚČET = KRÁTKODOBÉ DLUHY."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Aktiva udávají složení majetku, pasiva zdroje krytí. Vždy platí bilanční rovnováha AKTIVA = PASIVA.",
+                citace: "Aktiva – majetek podniku (DM, oběžný majetek). Pasiva – zdroje krytí majetku podniku... Součet aktiv se musí rovnat součtu pasiv … AKTIVA = PASIVA."
+            },
+            {
+                kategorie: "Rozvaha a bilanční rovnice",
+                otazka: "Jaké jsou dvě hlavní funkce rozvahy a jak se z rozvahy vypočítá hodnota vlastního kapitálu?",
+                moznosti: [
+                    "Informuje o struktuře majetku a zdrojích a slouží pro finanční analýzu; platí Vlastní kapitál = Aktiva – Cizí zdroje.",
+                    "Informuje o výši tržeb a zisku a slouží pro výpočet daně z příjmů; platí Vlastní kapitál = Výnosy – Provozní náklady.",
+                    "Informuje o stavu bankovních účtů a slouží pro audit v bance; platí Vlastní kapitál = Oběžná aktiva + Cizí zdroje.",
+                    "Informuje o cenách výrobků a slouží pro plánování výroby; platí Vlastní kapitál = Dlouhodobý majetek – Zásoby."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Rozvaha udává strukturu majetku/zdrojů a je podkladem finanční analýzy. Vlastní kapitál = Aktiva - Cizí zdroje.",
+                citace: "Funkce rozvahy: Poskytuje přehled o uspořádání (struktuře) majetku podniku a o zdrojích jeho financování. Poskytuje informace pro finanční analýzu podniku... Vlastní kapitál = aktiva – cizí zdroje."
+            },
+            {
+                kategorie: "Rozvaha a bilanční rovnice",
+                otazka: "Které tři základní druhy rozvah rozlišujeme v závislosti na okamžiku jejich sestavení?",
+                moznosti: [
+                    "Zahajovací rozvaha (při založení podniku), počáteční rozvaha (na začátku roku) a konečná rozvaha (na konci roku).",
+                    "Řádná rozvaha (měsíčně), mimořádná rozvaha (čtvrtletně) a mezitimní rozvaha (ročně při schvalování závěrky).",
+                    "Provozní rozvaha (při nákupu), finanční rozvaha (při úvěru) a výsledková rozvaha (při rozdělování zisku).",
+                    "Druhová rozvaha (podle účtů), účelová rozvaha (podle středisek) a konsolidovaná rozvaha (podle auditora)."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Podle okamžiku sestavení se rozlišuje zahajovací rozvaha (založení), počáteční (začátek období) a konečná rozvaha (konec období).",
+                citace: "Druhy rozvahy: Zahajovací rozvaha … sestavuje se při založení podniku. Počáteční rozvaha … sestavuje se na začátku účetního období. Konečná rozvaha … sestavuje se na konci účetního období."
+            },
+            {
+                kategorie: "Změny rozvahových položek",
+                otazka: "K jakému typu rozvahové změny dochází při nákupu materiálu na fakturu nebo při přijetí bankovního úvěru?",
+                moznosti: [
+                    "Dochází ke zvýšení aktiv i pasiv o stejnou částku (+A, +P), což vedete ke zvýšení obou stran rozvahy.",
+                    "Dochází ke snížení aktiv i pasiv o stejnou částku (-A, -P), což vede ke snížení obou stran rozvahy.",
+                    "Dochází ke změně pouze v aktivech podniku (+A, -A), přičemž celková bilanční suma rozvahy se nemění.",
+                    "Dochází ke změně pouze v pasivech podniku (+P, -P), přičemž celková bilanční suma rozvahy se nemění."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Nákup materiálu na fakturu i bankovní úvěr zvyšují majetek (aktiva) i závazky (pasiva) o stejnou částku (+A, +P).",
+                citace: "Aktiva a pasiva se zvýší o stejnou částku … +A, +P (např. nákup materiálu od dodavatele, úvěr od banky …)."
+            },
+            {
+                kategorie: "Změny rozvahových položek",
+                otazka: "K jakému typu rozvahové změny dochází při úhradě dodavatelské faktury z BÚ nebo při splátce úvěru?",
+                moznosti: [
+                    "Dochází ke snížení aktiv i pasiv o stejnou částku (-A, -P), což vede ke snížení obou stran rozvahy.",
+                    "Dochází ke zvýšení aktiv i pasiv o stejnou částku (+A, +P), což vede ke zvýšení obou stran rozvahy.",
+                    "Dochází ke změně pouze v aktivech podniku (+A, -A), přičemž celková bilanční suma rozvahy se nemění.",
+                    "Dochází ke změně pouze v pasivech podniku (+P, -P), přičemž celková bilanční suma rozvahy se nemění."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Úhrada faktury z BÚ i splátka úvěru snižují peněžní prostředky (aktiva) i dluhy (pasiva) o stejnou částku (-A, -P).",
+                citace: "Aktiva a pasiva se sníží o stejnou částku … -A, -P (např. úhrada faktury od dodavatele, splátka bankovního úvěru …)."
+            },
+            {
+                kategorie: "Změny rozvahových položek",
+                otazka: "K jakému typu rozvahové změny dochází, pokud odběratel uhradí fakturu na BÚ nebo nakoupíme materiál za hotové?",
+                moznosti: [
+                    "Jedna položka aktiv se zvýší a druhá sníží (+A, -A); bilanční suma rozvahy zůstává zcela nezměněna.",
+                    "Jedna položka pasiv se zvýší a druhá sníží (+P, -P); bilanční suma rozvahy zůstává zcela nezměněna.",
+                    "Obě strany rozvahy se současně zvýší o stejnou částku (+A, +P); bilanční suma rozvahy vzroste o nákup.",
+                    "Obě strany rozvahy se současně sníží o stejnou částku (-A, -P); bilanční suma rozvahy poklesne o platbu."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Jde o změnu pouze v majetkové struktuře (+A, -A), kde se celková bilanční suma rozvahy nemění.",
+                citace: "Jedna položka aktiv se zvýší, druhá sníží … +A, -A (např. odběratel uhradí fakturu, nákup materiálu za hotové …)."
+            },
+            {
+                kategorie: "Změny rozvahových položek",
+                otazka: "K jakému typu rozvahové změny dochází při úhradě faktury dodavateli přímo z poskytnutého bankovního úvěru?",
+                moznosti: [
+                    "Jedna položka pasiv se zvýší a druhá sníží (+P, -P); celková bilanční suma rozvahy se vůbec nemění.",
+                    "Jedna položka aktiv se zvýší a druhá sníží (+A, -A); celková bilanční suma rozvahy se vůbec nemění.",
+                    "Obě strany rozvahy se zvýší o stejnou částku (+A, +P); celková bilanční suma rozvahy vzroste o úvěr.",
+                    "Obě strany rozvahy se sníží o stejnou částku (-A, -P); celková bilanční suma rozvahy klesne o úhradu."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Dochází k přeměně jednoho závazku v druhý (+P, -P), přičemž bilanční suma zůstává konstantní.",
+                citace: "Jedna položka pasiv se zvýší, druhá sníží … +P, -P (např. úhrada faktury od dodavatele z bankovního úvěru …)."
+            },
+            {
+                kategorie: "Struktura aktiv",
+                otazka: "Které majetkové položky materiální povahy řadíme podle skript do dlouhodobého hmotného majetku (DHM)?",
+                moznosti: [
+                    "Pozemky, stavby bez ohledu na cenu, movité věci, pěstitelské celky porostů, dospělá zvířata a drobný DHM.",
+                    "Předměty z práv průmyslového vlastnictví, software, nehmotné výsledky výzkumu a vývoje, znalosti a Goodwill.",
+                    "Cenné papíry jako akcie a obligace, vklady do jiných obchodních společností a dlouhodobé termínované vklady.",
+                    "Zásoby materiálu, nedokončená výroba, polotovary, hotové výrobky, zboží na skladě a krátkodobé pohledávky."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "DHM zahrnuje pozemky, stavby bez ohledu na ocenění, hmotné movité věci, pěstitelské celky, zvířata a drobný DHM.",
+                citace: "Dlouhodobý hmotný majetek: Pozemky, stavby (včetně budov) bez ohledu na výši ocenění, hmotné věci movité, pěstitelské celky trvalých porostů, dospělá zvířata a jejich stáda, drobný dlouhodobý majetek."
+            },
+            {
+                kategorie: "Struktura aktiv",
+                otazka: "Které majetkové položky nemateriální povahy spadají podle účetních předpisů do dlouhodobého nehmotného majetku?",
+                moznosti: [
+                    "Práva průmyslového vlastnictví, software, nehmotné výsledky výzkumu a vývoje, získané znalosti a Goodwill.",
+                    "Pozemky, budovy a stavby bez ohledu na výši ocenění, samostatné movité věci a pěstitelské celky porostů.",
+                    "Majetkové cenné papíry k obchodování, dluhopisy držené do splatnosti a podíly v ovládaných obchodních firmách.",
+                    "Krátkodobé pohledávky vůči odběratelům, peněžní prostředky v pokladně, ceniny a zásoby materiálu na skladě."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "DNM zahrnuje práva průmyslového vlastnictví, software, nehmotné výsledky výzkumu/vývoje, znalosti a Goodwill.",
+                citace: "Dlouhodobý nehmotný majetek: Předměty z práv průmyslového vlastnictví, software, nehmotné výsledky výzkumu a vývoje, znalosti, Goodwill."
+            },
+            {
+                kategorie: "Struktura aktiv",
+                otazka: "Které konkrétní položky tvoří složku dlouhodobého finančního majetku (DFM) podniku?",
+                moznosti: [
+                    "Cenné papíry (např. akcie, obligace) a majetkové vklady do jiných obchodních společností s dobou držení > 1 rok.",
+                    "Software, průmyslová práva, výsledky vývoje, licence a Goodwill s dobou použitelnosti delší než 1 rok.",
+                    "Peníze v pokladně, běžné bankovní účty, ceniny a majetkové cenné papíry určené k obchodování na burze.",
+                    "Samostatné movité věci, budovy, stavby, dospělá zvířata a pěstitelské celky trvalých porostů podniku."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "DFM tvoří cenné papíry a vklady v jiných obchodních společnostech držené déle než 1 rok.",
+                citace: "Dlouhodobý finanční majetek: Cenné papíry (akcie, obligace …), vklady do jiných obchodních společností … Doba držení > 1 rok."
+            },
+            {
+                kategorie: "Struktura aktiv",
+                otazka: "Jaký je správný postup koloběhu oběžného majetku během hospodářské činnosti podniku?",
+                moznosti: [
+                    "Peníze -> materiál -> nedokončená výroba -> výrobky -> pohledávky -> peníze.",
+                    "Peníze -> výrobky -> nedokončená výroba -> materiál -> pohledávky -> peníze.",
+                    "Materiál -> peníze -> výrobky -> nedokončená výroba -> pohledávky -> peníze.",
+                    "Pohledávky -> nedokončená výroba -> materiál -> výrobky -> peníze -> pohledávky."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Koloběh oběžného majetku probíhá v sekvenci: Peníze -> materiál -> nedokončená výroba -> výrobky -> pohledávky -> peníze.",
+                citace: "Oběžný majetek: Během hospodářské činnosti mění svou podobu: peníze -> materiál -> nedokončená výroba -> výrobky -> pohledávky -> peníze."
+            },
+            {
+                kategorie: "Struktura aktiv",
+                otazka: "Které tři hlavní skupiny majetku tvoří oběžný majetek s dobou použitelnosti do 1 roku?",
+                moznosti: [
+                    "Zásoby (materiál, nedokončená výroba, výrobky, zboží), krátkodobé pohledávky a krátkodobý finanční majetek.",
+                    "Dlouhodobý hmotný majetek, dlouhodobý nehmotný majetek a dlouhodobý finanční majetek ve vlastnictví podniku.",
+                    "Základní kapitál, kapitálové fondy, fondy ze zisku a nerozdělený výsledek hospodaření minulých let podniku.",
+                    "Krátkodobé závazky vůči dodavatelům, bankovní úvěry, rezervy na opravy majetku a nezaplacené mzdy zaměstnanců."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Oběžný majetek s použitelností do 1 roku se dělí na zásoby, krátkodobé pohledávky a krátkodobý finanční majetek.",
+                citace: "Oběžný majetek: Zásoby materiálu, nedokončené výroby, polotovarů, výrobků, zboží; Krátkodobé pohledávky... Krátkodobý finanční majetek..."
+            },
+            {
+                kategorie: "Struktura pasiv",
+                otazka: "Které složky tvoří vlastní kapitál podniku a o čem informuje jeho celková výše?",
+                moznosti: [
+                    "Tvoří jej základní kapitál, kapitálové fondy, fondy ze zisku a HV; informuje o hodnotě majetku ve vlastnictví.",
+                    "Tvoří jej dodavatelské faktury, bankovní úvěry, rezervy a mzdy; informuje o celkové výši zadlužení podniku.",
+                    "Tvoří jej zásoby materiálu, pohledávky za odběrateli a ceniny; informuje o celkové likviditě majetku firmy.",
+                    "Tvoří jej provozní výnosy, finanční výnosy a dotace ze státu; informuje o celkové roční výkonnosti podniku."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Vlastní kapitál obsahuje ZK, kapitálové fondy, fondy ze zisku a VH. Jeho výše informuje o majetku ve vlastnictví podniku.",
+                citace: "Vlastní kapitál: Základní kapitál, kapitálové fondy, fondy ze zisku, výsledek hospodaření. Jeho výše informuje o hodnotě majetku, který je ve vlastnictví podniku."
+            },
+            {
+                kategorie: "Struktura pasiv",
+                otazka: "Co tvoří cizí zdroje podniku, jakou funkci plní rezervy a o čem informuje celková výše cizích zdrojů?",
+                moznosti: [
+                    "Tvoří je závazky (FAP, úvěry, mzdy, daně, ZP, SP) a rezervy na budoucí výdaje; informují o velikosti zadlužení.",
+                    "Tvoří je základní kapitál a fondy ze zisku; rezervy slouží jako oběžný majetek; informují o majetku vlastníků.",
+                    "Tvoří je pokladna, bankovní účty a ceniny; rezervy slouží k nákupu akcií; informují o okamžité likviditě firmy.",
+                    "Tvoří je provozní a finanční náklady; rezervy představují odpisy majetku; informují o celkové ztrátě podniku."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Cizí zdroje tvoří závazky a rezervy na budoucí výdaje (např. opravy DM). Informují o celkovém zadlužení.",
+                citace: "Cizí zdroje (krátkodobé, dlouhodobé): Závazky... Za závazky jsou považovány i rezervy... Jejich výše informuje o velikosti zadlužení podniku."
+            },
+            {
+                kategorie: "Výkaz zisku a ztráty",
+                otazka: "V jakém členění se obvykle sestavuje Výkaz zisku a ztráty a jaké základní informace poskytuje?",
+                moznosti: [
+                    "Sestavuje se obvykle v druhovém členění a poskytuje informace o nákladech, výnosech a výkonnosti podniku.",
+                    "Sestavuje se obvykle v časovém členění a poskytuje informace o majetku, cizích zdrojích a likviditě podniku.",
+                    "Sestavuje se obvykle v bilančním členění a poskytuje informace o peněžních tocích a stavu pokladny podniku.",
+                    "Sestavuje se obvykle v úvěrovém členění a poskytuje informace o výši zaplacených daní a dotací ze státu."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Výsledovka se běžně vyhotovuje v druhovém členění a informuje o nákladech, výnosech, HV a výkonnosti podniku.",
+                citace: "Výkaz zisku a ztráty (výsledovka): Obvykle se sestavuje v druhovém členění... Poskytuje informace o nákladech, výnosech a o hospodářském výsledku... informovat o výkonnosti podniku."
+            },
+            {
+                kategorie: "Výkaz zisku a ztráty",
+                otazka: "Jakou formu má Výkaz zisku a ztráty a které dílčí výsledky hospodaření postupně vyčísluje?",
+                moznosti: [
+                    "Má vertikální stupňovitou podobu a vyčísluje provozní VH, finanční VH, VH před zdaněním a VH po zdanění.",
+                    "Má horizontální T-formu a vyčísluje počáteční stav aktiv, konečný stav pasiv a celkový obrat účtů.",
+                    "Má tabulkovou maticovou podobu a vyčísluje nerozdělený zisk, rezervní fond a přiznané dividendy.",
+                    "Má grafickou kruhovou podobu a vyčísluje čistou hodnotu aktiv, oběžný majetek a cizí kapitál podniku."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Výsledovka má vertikální stupňovitelnou strukturu, kde vyčísluje provozní VH, finanční VH, VH před zdaněním a po zdanění.",
+                citace: "Výkaz zisku a ztráty má vertikální podobu, je uspořádán stupňovitě... a vyčísluje: Provozní výsledek hospodaření... Finanční výsledek hospodaření... Výsledek hospodaření před zdaněním... po zdanění."
+            },
+            {
+                kategorie: "Výkaz zisku a ztráty",
+                otazka: "Jak se ve Výkazu zisku a ztráty vypočítá provozní výsledek hospodaření a finanční výsledek hospodaření?",
+                moznosti: [
+                    "Provozní VH = provozní výnosy – provozní náklady; Finanční VH = finanční výnosy – finanční náklady.",
+                    "Provozní VH = provozní výnosy + finanční výnosy; Finanční VH = provozní náklady + finanční náklady.",
+                    "Provozní VH = oběžná aktiva – krátkodobé závazky; Finanční VH = celkový kapitál – cizí zdroje podniku.",
+                    "Provozní VH = tržby z prodeje – celkové odpisy; Finanční VH = zaplacené úroky – kurzové ztráty bance."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Provozní VH = provozní výnosy – provozní náklady. Finanční VH = finanční výnosy – finanční náklady.",
+                citace: "Provozní výsledek hospodaření … provozní výnosy – provozní náklady. Finanční výsledek hospodaření … finanční výnosy – finanční náklady."
+            },
+            {
+                kategorie: "Příloha k účetní závěrce",
+                otazka: "V jaké formě se vyhotovuje Příloha k účetní závěrce a jaké klíčové informace musí obsahovat?",
+                moznosti: [
+                    "Vyhotovuje se v popisné či tabulkové formě; obsahuje obecné údaje o ÚJ a informace o použitých účetních metodách.",
+                    "Vyhotovuje se výhradně ve formě T-účtů; obsahuje přehled všech vydaných faktur a jmenný seznam zaměstnanců firmy.",
+                    "Vyhotovuje se ve formě bankovního výpisu; obsahuje výpočet daně z přidané hodnoty a výkaz zaplacených záloh.",
+                    "Vyhotovuje se ve formě zápisu z valné hromady; obsahuje plán investic a rozhodnutí o zvýšení základního kapitálu."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Příloha má popisnou nebo tabulkovou formu. Obsahuje obecné informace o ÚJ a detailní popis použitých účetních metod.",
+                citace: "Příloha k účetní závěrce: Může být vyhotovována v popisné formě nebo ve formě tabulek. Obsahuje: Obecné údaje o účetní jednotce, Informace o účetních metodách..."
+            },
+            {
+                kategorie: "Finanční analýza",
+                otazka: "Co je hlavním účelem finanční analýzy a jak je v ní definováno 'finanční zdraví podniku'?",
+                moznosti: [
+                    "Účelem je prověřit finanční zdraví; to znamená, že podnik dlouhodobě dosahuje požadovanou míru zisku (roste hodnota).",
+                    "Účelem je spočítat výši daně z příjmů; to znamená, že podnik neplatí žádné sankční pokuty ani úroky z prodlení.",
+                    "Účelem je schválit odpisový plán; to znamená, že podnik má veškerý dlouhodobý hmotný majetek plně odepsán.",
+                    "Účelem je provést fyzickou inventuru; to znamená, že v pokladně a ve skladu materiálu nesmí vzniknout manko."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Finanční analýza hodnotí hospodaření a prověřuje finanční zdraví (tj. dlouhodobé dosahování požadované míry zisku a růst tržní hodnoty).",
+                citace: "Finanční analýza: Hodnotí hospodaření podniku s vloženými prostředky investorů... poskytnout informace, zda se podnik těší dobrému finančnímu zdraví... podnik dlouhodobě dosahuje míru zisku, kterou požadují vlastníci."
+            },
+            {
+                kategorie: "Finanční analýza",
+                otazka: "Které ekonomické subjekty rozlišujeme ve finanční analýze a jak se dělí na externí a interní uživatele?",
+                moznosti: [
+                    "Externí jsou stát, investoři, banky, obchodní partneři a konkurence; interní jsou manažeři, zaměstnanci a odbory.",
+                    "Externí jsou manažeři a odborové organizace; interní jsou státní orgány, komerční banky a dodavatelé materiálu.",
+                    "Externí jsou akcionáři a zaměstnanci podniku; interní jsou konkurenční podniky a finanční úřady v regionu.",
+                    "Externí jsou auditor a hlavní účetní podniku; interní jsou zákazníci, odběratelé a zahraniční investoři."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Externí uživatelé = stát, investoři, banky, partneři, konkurence. Interní uživatelé = manažeři, zaměstnanci, odbory.",
+                citace: "Ekonomické subjekty: Externí – stát a jeho orgány, investoři, banky, obchodní partneři, konkurence. Interní – manažeři, zaměstnanci, odborové organizace."
+            },
+            {
+                kategorie: "Finanční analýza",
+                otazka: "Co je základním zdrojem informací pro finanční analýzu a jaké jsou v ní základní analytické přístupy?",
+                moznosti: [
+                    "Zdrojem je řádná účetní závěrka (výkazy); přístupy jsou výpočet poměrových ukazatelů a jejich porovnání v čase.",
+                    "Zdrojem je daňové přiznání k DPH; přístupy jsou fyzická kontrola pokladny a inventarizace skladu materiálu.",
+                    "Zdrojem je výpis z obchodního rejstříku; přístupy jsou kontrola docházky zaměstnanců a výpočet mzdových nákladů.",
+                    "Zdrojem je pojistná smlouva majetku; přístupy jsou stanovení tržní ceny budov a oceňování zásob reprodukční cenou."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Zdrojem dat jsou výkazy řádné účetní závěrky. Postupuje se výpočtem poměrových ukazatelů a jejich srovnáním v čase.",
+                citace: "Zdroje informací finanční analýzy: Řádná účetní závěrka... Základní přístupy: výpočet a hodnocení poměrových ukazatelů, porovnání ukazatelů v čase."
+            },
+            {
+                kategorie: "Ukazatele rentability",
+                otazka: "Jak se vypočítá Rentabilita celkového kapitálu a Rentabilita vlastního kapitálu podle skript?",
+                moznosti: [
+                    "Celkového = zisk před zdaněním a úroky / celkový kapitál; Vlastního = zisk po zdanění / vlastní kapitál.",
+                    "Celkového = zisk po zdanění / oběžná aktiva; Vlastního = zisk před zdaněním / dlouhodobý majetek.",
+                    "Celkového = roční tržby / celkový kapitál; Vlastního = celkové dluhy / vlastní kapitál podniku.",
+                    "Celkového = zisk po zdanění / roční tržby podniku; Vlastního = zisk před zdaněním / cizí zdroje podniku."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Rentabilita celkového kapitálu = EBT+úroky / celkový kapitál. Rentabilita vlastního kapitálu = zisk po zdanění / vlastní kapitál.",
+                citace: "Rentabilita celkového kapitálu = zisk před zdaněním a úrok / celkový vložený kapitál. Rentabilita vlastního kapitálu = zisk po zdanění / vlastní kapitál."
+            },
+            {
+                kategorie: "Ukazatele rentability",
+                otazka: "Jak se podle znění studijního materiálu definuje Rentabilita tržeb a Rentabilita nákladů?",
+                moznosti: [
+                    "Rentabilita tržeb = zisk po zdanění / tržby; Rentabilita nákladů = zisk po zdanění / tržby (dle skript).",
+                    "Rentabilita tržeb = zisk po zdanění / náklady; Rentabilita nákladů = zisk před zdaněním / celková aktiva.",
+                    "Rentabilita tržeb = tržby / oběžná aktiva; Rentabilita nákladů = celkové náklady / krátkodobé závazky.",
+                    "Rentabilita tržeb = zisk před zdaněním / tržby; Rentabilita nákladů = zisk po zdanění / vlastní kapitál."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "V textu skript je Rentabilita tržeb definována jako zisk po zdanění / tržby a Rentabilita nákladů jako zisk po zdanění / tržby (hodnotí zisk z 1 Kč nákladů).",
+                citace: "Rentabilita tržeb = zisk po zdanění / tržby... Rentabilita nákladů = zisk po zdanění / tržby..."
+            },
+            {
+                kategorie: "Ukazatele likvidity",
+                otazka: "Jak se vypočítá ukazatel běžné likvidity a jaká hůře likvidní aktiva obsahuje jeho čitatel?",
+                moznosti: [
+                    "Běžná likvidita = oběžná aktiva celkem / krátkodobé závazky; čitatel obsahuje i zásoby a pohledávky po splatnosti.",
+                    "Běžná likvidita = (oběžná aktiva – zásoby) / krátkodobé závazky; čitatel obsahuje výhradně peněžní hotovost a BÚ.",
+                    "Běžná likvidita = oběžná aktiva celkem / celkový kapitál; čitatel obsahuje dlouhodobý hmotný a nehmotný majetek.",
+                    "Běžná likvidita = peněžní prostředky / krátkodobé závazky; čitatel obsahuje pouze ceniny a krátkodobé cenné papíry."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Běžná likvidita = oběžná aktiva / krátkodobé závazky. Čitatel zahrnuje i méně likvidní položky jako zásoby a pohledávky po splatnosti.",
+                citace: "Ukazatel běžné likvidity = oběžná aktiva celkem / krátkodobé závazky. Čitatel obsahuje i hůře likvidní aktiva – pohledávky po splatnosti, nedobytné pohledávky, zásoby..."
+            },
+            {
+                kategorie: "Ukazatele likvidity",
+                otazka: "Jak se vypočítá ukazatel pohotové likvidity a které konkrétní složky oběžných aktiv tvoří jeho čitatel?",
+                moznosti: [
+                    "Pohotová likvidita = (oběžná aktiva – zásoby) / krátkodobé závazky; čitatel tvoří peníze, kr. CP a kr. pohledávky.",
+                    "Pohotová likvidita = oběžná aktiva celkem / krátkodobé závazky; čitatel tvoří zásoby materiálu a nedokončená výroba.",
+                    "Pohotová likvidita = (oběžná aktiva – pohledávky) / celkové dluhy; čitatel tvoří dlouhodobé cenné papíry a budovy.",
+                    "Pohotová likvidita = peněžní prostředky / krátkodobé závazky; čitatel tvoří pouze běžný bankovní účet a pokladna."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Pohotová likvidita ze své definice vylučuje zásoby. V čitateli zůstávají peněžní prostředky, kr. CP a kr. pohledávky.",
+                citace: "Ukazatel pohotové likvidity = (oběžná aktiva celkem – zásoby) / krátkodobé závazky. Čitatel obsahuje peněžní prostředky, krátkodobé cenné papíry, krátkodobé pohledávky..."
+            },
+            {
+                kategorie: "Ukazatele likvidity",
+                otazka: "Jak se vypočítá ukazatel okamžité likvidity a co vypovídá o platební schopnosti podniku?",
+                moznosti: [
+                    "Okamžitá likvidita = (oběžná aktiva – zásoby – pohledávky) / kr. závazky; ukazuje schopnost ihned hradit dluhy.",
+                    "Okamžitá likvidita = oběžná aktiva celkem / krátkodobé závazky; ukazuje průměrnou dobu obratu zásob ve skladu.",
+                    "Okamžitá likvidita = (oběžná aktiva – zásoby) / celkový kapitál; ukazuje podíl cizích zdrojů na financování.",
+                    "Okamžitá likvidita = krátkodobé pohledávky / tržby; ukazuje výnosnost vlastního kapitálu vloženého investory."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Okamžitá likvidita = nejlikvidnější aktiva (peníze + kr. obchodovatelné CP) / krátkodobé závazky; měří možnost okamžité úhrady.",
+                citace: "Ukazatel okamžité likvidity = (oběžná aktiva celkem – zásoby – pohledávky) / krátkodobé závazky. Čitatel obsahuje peněžní prostředky, krátkodobé obchodovatelné cenné papíry. Ukazuje schopnost podniku okamžitě hradit splatné závazky."
+            },
+            {
+                kategorie: "Ukazatele zadluženosti",
+                otazka: "Jak se vypočítá ukazatel celkové zadluženosti a o čem informuje jeho výsledná hodnota?",
+                moznosti: [
+                    "Celková zadluženost = celkové dluhy / celkový kapitál; ukazuje, do jaké míry je majetek financován cizími zdroji.",
+                    "Celková zadluženost = cizí zdroje / vlastní kapitál; ukazuje výnosnost zaplacených úroků z bankovních úvěrů.",
+                    "Celková zadluženost = dlouhodobé závazky / oběžná aktiva; ukazuje schopnost podniku okamžitě hradit své dluhy.",
+                    "Celková zadluženost = celkový kapitál / celkové dluhy; ukazuje roční rychlost obratu celkového majetku podniku."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Celková zadluženost = celkové dluhy / celkový kapitál. Udává podíl cizích zdrojů na financování majetku.",
+                citace: "Celková zadluženost = celkové dluhy / celkový kapitál. Podíl celkových dluhů k celkovému majetku podniku ukazuje, do jaké míry je majetek podniku financován cizími zdroji."
+            },
+            {
+                kategorie: "Ukazatele aktivity",
+                otazka: "Jak se vypočítají ukazatele obratu celkových aktiv, doby obratu zásob a doby obratu pohledávek?",
+                moznosti: [
+                    "Obrat aktiv = tržby / aktiva; Doba obratu zásob = zásoba / denní spotřeba; Doba pohledávek = pohledávky / denní tržby.",
+                    "Obrat aktiv = aktiva / zisk; Doba obratu zásob = tržby / zásoby; Doba pohledávek = denní tržby / pohledávky odběratelů.",
+                    "Obrat aktiv = zisk / aktiva; Doba obratu zásob = denní spotřeba / zásoby; Doba pohledávek = tržby / krátkodobé závazky.",
+                    "Obrat aktiv = tržby / vlastní kapitál; Doba obratu zásob = zásoby / tržby; Doba pohledávek = pohledávky / celkové dluhy."
+                ],
+                spravnaIndex: 0,
+                vysvetleni: "Obrat aktiv = roční tržby / celková aktiva. Doba obratu zásob = průměrná zásoba / denní spotřeba. Doba obratu pohledávek = pohledávky / denní tržby.",
+                citace: "Obrat celkových aktiv = roční tržby / celková aktiva. Doba obratu zásob = průměrná zásoba / denní spotřeba. Doba obratu pohledávek = pohledávky vůči odběratelům / denní tržby."
+            }
+        ];
+
+        // ==========================================
+        // EVENLY AND RANDOMLY DISPERSED ANSWER TARGETS
+        // Sequence of 40 indices containing EXACTLY 10x 0(A), 10x 1(B), 10x 2(C), 10x 3(D)
+        // ==========================================
+        const targetIndices = [
+            2, 0, 3, 1, 3, 0, 2, 1, 0, 3, // Q 1-10  (0:3, 1:2, 2:2, 3:3)
+            1, 2, 0, 3, 2, 1, 3, 0, 1, 2, // Q 11-20 (0:2, 1:3, 2:3, 3:2)
+            0, 3, 1, 2, 1, 0, 3, 2, 3, 0, // Q 21-30 (0:3, 1:2, 2:2, 3:3)
+            2, 1, 0, 3, 2, 1, 0, 3, 1, 2  // Q 31-40 (0:2, 1:3, 2:3, 3:2)
+        ]; // Total: 10x A, 10x B, 10x C, 10x D
+
+        // BUILD SHUFFLED/DISPERSED QUESTIONS DATASET
+        const questions = baseQuestions.map((q, idx) => {
+            const copy = JSON.parse(JSON.stringify(q));
+            const oldCorrect = copy.spravnaIndex;
+            const targetCorrect = targetIndices[idx];
+
+            if (oldCorrect !== targetCorrect) {
+                // Swap options so targetCorrect gets the correct answer string
+                const temp = copy.moznosti[oldCorrect];
+                copy.moznosti[oldCorrect] = copy.moznosti[targetCorrect];
+                copy.moznosti[targetCorrect] = temp;
+                copy.spravnaIndex = targetCorrect;
+            }
+            return copy;
+        });
+
+        // State Variables
+        let userAnswers = new Array(questions.length).fill(null); // stores selected option index (0..3)
+        let activeIndex = 0;
+        let isErrorFilterActive = false;
+        let errorIndices = [];
+        let isSoundMuted = false;
+
+        // Web Audio API Synthesizer
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playSound(type) {
+            if (isSoundMuted) return;
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                const now = ctx.currentTime;
+
+                if (type === 'click') {
+                    osc.frequency.setValueAtTime(400, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'correct') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(523.25, now); // C5
+                    osc.frequency.setValueAtTime(659.25, now + 0.08); // E5
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, now); // A3
+                    osc.frequency.setValueAtTime(174.61, now + 0.1); // F3
+                    gain.gain.setValueAtTime(0.12, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'toggle') {
+                    osc.frequency.setValueAtTime(600, now);
+                    gain.gain.setValueAtTime(0.05, now);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+                    osc.start(now);
+                    osc.stop(now + 0.08);
+                }
+            } catch(e) {
+                console.log("Audio not supported or blocked");
+            }
+        }
+
+        function toggleSound() {
+            isSoundMuted = !isSoundMuted;
+            document.getElementById('soundIcon').innerText = isSoundMuted ? '🔇' : '🔊';
+            playSound('toggle');
+        }
+
+        // INIT APP
+        window.onload = function() {
+            renderMapGrid();
+            renderQuestion();
+            updateStats();
+            setupKeyboardNav();
+        };
+
+        // RENDER QUESTION MAP (40 SQUARE BUTTONS)
+        function renderMapGrid() {
+            const grid = document.getElementById('questionMapGrid');
+            grid.innerHTML = '';
+
+            const itemsToDisplay = isErrorFilterActive ? errorIndices : Array.from({length: questions.length}, (_, i) => i);
+
+            if (itemsToDisplay.length === 0 && isErrorFilterActive) {
+                grid.innerHTML = `<div class="col-span-full text-center text-xs text-slate-400 py-2">Žádné chyby! 🎉</div>`;
+                return;
+            }
+
+            itemsToDisplay.forEach((qIndex) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                const isCurrent = qIndex === activeIndex;
+                const ans = userAnswers[qIndex];
+                const q = questions[qIndex];
+
+                let bgClass = 'bg-slate-700/80 text-slate-300 hover:bg-slate-600';
+                if (ans !== null) {
+                    if (ans === q.spravnaIndex) {
+                        bgClass = 'bg-emerald-600 text-white hover:bg-emerald-500';
+                    } else {
+                        bgClass = 'bg-rose-600 text-white hover:bg-rose-500';
+                    }
+                }
+
+                let borderClass = 'border border-slate-600/50';
+                if (isCurrent) {
+                    borderClass = 'ring-2 ring-brand-400 ring-offset-2 ring-offset-slate-900 font-extrabold border-brand-400';
+                }
+
+                btn.className = `w-full aspect-square rounded-lg text-xs font-bold transition flex items-center justify-center ${bgClass} ${borderClass}`;
+                btn.innerText = qIndex + 1;
+                btn.onclick = () => {
+                    playSound('click');
+                    activeIndex = qIndex;
+                    renderQuestion();
+                    renderMapGrid();
+                };
+
+                grid.appendChild(btn);
+            });
+        }
+
+        // RENDER ACTIVE QUESTION
+        function renderQuestion() {
+            const q = questions[activeIndex];
+            const currentAnswer = userAnswers[activeIndex];
+
+            document.getElementById('currentQIndexNumber').innerText = activeIndex + 1;
+            document.getElementById('questionCategory').innerText = q.kategorie;
+            document.getElementById('questionText').innerText = q.otazka;
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+
+            const labels = ['A', 'B', 'C', 'D'];
+
+            q.moznosti.forEach((optionText, optIndex) => {
+                const optBtn = document.createElement('button');
+                optBtn.type = 'button';
+
+                let baseStyles = "w-full text-left p-4 rounded-xl border transition-all duration-200 flex items-start space-x-3 text-sm font-medium relative ";
+                
+                if (currentAnswer === null) {
+                    // Not answered yet
+                    baseStyles += "bg-slate-700/50 hover:bg-slate-700 border-slate-600/80 hover:border-brand-500 text-slate-200 shadow-sm";
+                } else {
+                    // Already answered
+                    if (optIndex === q.spravnaIndex) {
+                        // Correct Option
+                        baseStyles += "bg-emerald-950/80 border-emerald-500 text-emerald-100 ring-1 ring-emerald-500";
+                    } else if (optIndex === currentAnswer) {
+                        // Wrong Option Chosen
+                        baseStyles += "bg-rose-950/80 border-rose-500 text-rose-100 ring-1 ring-rose-500";
+                    } else {
+                        // Other unselected options
+                        baseStyles += "bg-slate-800/40 border-slate-700/60 text-slate-400 opacity-60";
+                    }
+                }
+
+                optBtn.className = baseStyles;
+
+                let iconIndicator = '';
+                if (currentAnswer !== null) {
+                    if (optIndex === q.spravnaIndex) {
+                        iconIndicator = `<span class="ml-auto text-emerald-400 font-bold text-base">✓</span>`;
+                    } else if (optIndex === currentAnswer) {
+                        iconIndicator = `<span class="ml-auto text-rose-400 font-bold text-base">✗</span>`;
+                    }
+                }
+
+                optBtn.innerHTML = `
+                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-md bg-slate-800 text-slate-300 font-mono text-xs font-bold border border-slate-600 flex-shrink-0 mt-0.5">
+                        ${labels[optIndex]}
+                    </span>
+                    <span class="flex-grow pr-2 leading-relaxed">${optionText}</span>
+                    ${iconIndicator}
+                `;
+
+                optBtn.onclick = () => {
+                    if (currentAnswer === null) {
+                        selectOption(optIndex);
+                    }
+                };
+
+                container.appendChild(optBtn);
+            });
+
+            // Explanation box handling
+            const expBox = document.getElementById('explanationBox');
+            if (currentAnswer !== null) {
+                expBox.classList.remove('hidden');
+                document.getElementById('explanationText').innerText = q.vysvetleni;
+                document.getElementById('citationText').innerText = `"${q.citace}"`;
+            } else {
+                expBox.classList.add('hidden');
+            }
+
+            // Navigation buttons enable/disable
+            document.getElementById('prevBtn').disabled = activeIndex === 0;
+            
+            const nextBtn = document.getElementById('nextBtn');
+            if (activeIndex === questions.length - 1) {
+                nextBtn.innerHTML = `<span>Protokol</span> <span>🖨️</span>`;
+            } else {
+                nextBtn.innerHTML = `<span>Další</span> <span>→</span>`;
+            }
+
+            renderMapGrid();
+        }
+
+        // OPTION SELECTION LOGIC
+        function selectOption(optIndex) {
+            userAnswers[activeIndex] = optIndex;
+            const q = questions[activeIndex];
+
+            if (optIndex === q.spravnaIndex) {
+                playSound('correct');
+            } else {
+                playSound('wrong');
+            }
+
+            updateStats();
+            renderQuestion();
+        }
+
+        // STATS & OA GRADING CALCULATION
+        function updateStats() {
+            let correctCount = 0;
+            let wrongCount = 0;
+            let answeredCount = 0;
+            errorIndices = [];
+
+            userAnswers.forEach((ans, i) => {
+                if (ans !== null) {
+                    answeredCount++;
+                    if (ans === questions[i].spravnaIndex) {
+                        correctCount++;
+                    } else {
+                        wrongCount++;
+                        errorIndices.push(i);
+                    }
+                }
+            });
+
+            document.getElementById('statCorrect').innerText = correctCount;
+            document.getElementById('statWrong').innerText = wrongCount;
+
+            const accuracy = answeredCount > 0 ? ((correctCount / answeredCount) * 100).toFixed(1) : '0.0';
+            document.getElementById('statAccuracy').innerText = `${accuracy} %`;
+
+            // Progress bar
+            const totalCount = questions.length;
+            const progressPct = (answeredCount / totalCount) * 100;
+            document.getElementById('progressBar').style.width = `${progressPct}%`;
+            document.getElementById('questionCounterText').innerText = `Otázka ${activeIndex + 1} / ${totalCount}`;
+
+            // Filter button text update
+            document.getElementById('filterBtnText').innerText = `Filtr chyb (${errorIndices.length})`;
+
+            // Calculate OA Grade
+            // OA Scale: 100-90% -> 1, 89-75% -> 2, 74-60% -> 3, 59-45% -> 4, <45% -> 5
+            const totalAccuracyPct = totalCount > 0 ? (correctCount / totalCount) * 100 : 0;
+            let grade = 5;
+            let gradeText = "Nedostatečný";
+            let gradeColor = "text-rose-400 border-rose-400";
+
+            if (totalAccuracyPct >= 90) {
+                grade = 1; gradeText = "1 - Výborný"; gradeColor = "text-emerald-400 border-emerald-400";
+            } else if (totalAccuracyPct >= 75) {
+                grade = 2; gradeText = "2 - Chvalitebný"; gradeColor = "text-blue-400 border-blue-400";
+            } else if (totalAccuracyPct >= 60) {
+                grade = 3; gradeText = "3 - Dobrý"; gradeColor = "text-amber-400 border-amber-400";
+            } else if (totalAccuracyPct >= 45) {
+                grade = 4; gradeText = "4 - Dostatečný"; gradeColor = "text-orange-400 border-orange-400";
+            } else {
+                grade = 5; gradeText = "5 - Nedostatečný"; gradeColor = "text-rose-500 border-rose-500";
+            }
+
+            const badge = document.getElementById('oaGradeBadge');
+            const txt = document.getElementById('oaGradeText');
+
+            if (answeredCount === 0) {
+                badge.innerText = '-';
+                txt.innerText = 'Příprava...';
+                badge.className = "w-10 h-10 rounded-full bg-slate-800 border-2 border-slate-600 flex items-center justify-center font-extrabold text-slate-400 text-lg shadow";
+            } else {
+                badge.innerText = grade;
+                txt.innerText = gradeText;
+                badge.className = `w-10 h-10 rounded-full bg-slate-800 border-2 flex items-center justify-center font-extrabold text-lg shadow ${gradeColor}`;
+            }
+        }
+
+        // NAVIGATION LOGIC
+        function navigateQuestion(direction) {
+            playSound('click');
+
+            if (isErrorFilterActive && errorIndices.length > 0) {
+                const currentPosInErrors = errorIndices.indexOf(activeIndex);
+                if (currentPosInErrors !== -1) {
+                    let nextPos = currentPosInErrors + direction;
+                    if (nextPos >= 0 && nextPos < errorIndices.length) {
+                        activeIndex = errorIndices[nextPos];
+                        renderQuestion();
+                        return;
+                    }
+                }
+            }
+
+            let newIdx = activeIndex + direction;
+
+            if (newIdx < 0) {
+                newIdx = 0;
+            } else if (newIdx >= questions.length) {
+                openPrintModal();
+                return;
+            }
+
+            activeIndex = newIdx;
+            renderQuestion();
+        }
+
+        // RESHUFFLE QUESTIONS
+        function reshuffleQuestions() {
+            playSound('click');
+            // Shuffle questions and reset answers
+            for (let i = questions.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [questions[i], questions[j]] = [questions[j], questions[i]];
+            }
+            userAnswers = new Array(questions.length).fill(null);
+            activeIndex = 0;
+            isErrorFilterActive = false;
+            document.getElementById('filterErrorsBtn').classList.remove('bg-amber-600', 'border-amber-500');
+            renderQuestion();
+            updateStats();
+        }
+
+        // RESTART QUIZ
+        function restartQuiz() {
+            playSound('click');
+            userAnswers = new Array(questions.length).fill(null);
+            activeIndex = 0;
+            isErrorFilterActive = false;
+            document.getElementById('filterErrorsBtn').classList.remove('bg-amber-600', 'border-amber-500');
+            renderQuestion();
+            updateStats();
+        }
+
+        // TOGGLE ERROR FILTER MODE
+        function toggleErrorFilter() {
+            playSound('click');
+            if (errorIndices.length === 0) {
+                alert("Zatím nemáte žádné chybné odpovědi! Skvělá práce.");
+                return;
+            }
+
+            isErrorFilterActive = !isErrorFilterActive;
+            const btn = document.getElementById('filterErrorsBtn');
+
+            if (isErrorFilterActive) {
+                btn.classList.add('bg-amber-600', 'border-amber-500');
+                if (!errorIndices.includes(activeIndex)) {
+                    activeIndex = errorIndices[0];
+                }
+            } else {
+                btn.classList.remove('bg-amber-600', 'border-amber-500');
+            }
+
+            renderQuestion();
+            renderMapGrid();
+        }
+
+        // KEYBOARD SHORTCUTS
+        function setupKeyboardNav() {
+            document.addEventListener('keydown', (e) => {
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+                const key = e.key.toUpperCase();
+
+                if (['A', '1'].includes(key)) {
+                    if (userAnswers[activeIndex] === null) selectOption(0);
+                } else if (['B', '2'].includes(key)) {
+                    if (userAnswers[activeIndex] === null) selectOption(1);
+                } else if (['C', '3'].includes(key)) {
+                    if (userAnswers[activeIndex] === null) selectOption(2);
+                } else if (['D', '4'].includes(key)) {
+                    if (userAnswers[activeIndex] === null) selectOption(3);
+                } else if (e.key === 'ArrowLeft') {
+                    if (activeIndex > 0) navigateQuestion(-1);
+                } else if (e.key === 'ArrowRight' || e.key === 'Enter') {
+                    navigateQuestion(1);
+                }
+            });
+        }
+
+        // PRINT PROTOCOL & MODAL LOGIC
+        function openPrintModal() {
+            playSound('click');
+
+            let correctCount = 0;
+            let answeredCount = 0;
+            userAnswers.forEach((ans, i) => {
+                if (ans !== null) {
+                    answeredCount++;
+                    if (ans === questions[i].spravnaIndex) correctCount++;
+                }
+            });
+
+            const pct = questions.length > 0 ? ((correctCount / questions.length) * 100).toFixed(1) : 0;
+            
+            let grade = 5;
+            let gradeLabel = "Nedostatečný";
+            if (pct >= 90) { grade = 1; gradeLabel = "Výborný"; }
+            else if (pct >= 75) { grade = 2; gradeLabel = "Chvalitebný"; }
+            else if (pct >= 60) { grade = 3; gradeLabel = "Dobrý"; }
+            else if (pct >= 45) { grade = 4; gradeLabel = "Dostatečný"; }
+
+            const summaryHTML = `
+                <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-2">
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Celkový počet otázek:</span>
+                        <span class="font-bold text-white">${questions.length}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Zodpovězeno:</span>
+                        <span class="font-bold text-white">${answeredCount} z ${questions.length}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Správných odpovědí:</span>
+                        <span class="font-bold text-emerald-400">${correctCount}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-slate-400">Celková úspěšnost:</span>
+                        <span class="font-bold text-brand-300 text-base">${pct} %</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-slate-700">
+                        <span class="text-slate-300 font-semibold">Klasifikace Obchodní akademie:</span>
+                        <span class="font-extrabold text-amber-400 text-lg">${grade} (${gradeLabel})</span>
+                    </div>
+                </div>
+                <div class="text-xs text-slate-400">
+                    Kliknutím na tlačítko níže vytisknete detailní protokol včetně přehledu všech odpovědí a citací z výukového materiálu.
+                </div>
+            `;
+
+            document.getElementById('protocolPreviewContent').innerHTML = summaryHTML;
+            document.getElementById('printModal').classList.remove('hidden');
+
+            // Generate full printable DOM inside printContainer
+            generatePrintContainer(correctCount, pct, grade, gradeLabel);
+        }
+
+        function closePrintModal() {
+            playSound('click');
+            document.getElementById('printModal').classList.add('hidden');
+        }
+
+        function generatePrintContainer(correctCount, pct, grade, gradeLabel) {
+            const container = document.getElementById('printContainer');
+            const dateStr = new Date().toLocaleDateString('cs-CZ', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+            let questionsListHTML = '';
+            const labels = ['A', 'B', 'C', 'D'];
+
+            questions.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isCorrect = userAns === q.spravnaIndex;
+                const statusBadge = userAns === null 
+                    ? '<span style="color:#666;">NEZODPOVĚZENO</span>'
+                    : (isCorrect ? '<span style="color:#059669; font-weight:bold;">SPRÁVNĚ</span>' : '<span style="color:#dc2626; font-weight:bold;">CHYBNĚ</span>');
+
+                questionsListHTML += `
+                    <div class="print-card" style="margin-bottom: 16px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;">
+                        <div style="display:flex; justify-content:space-between; margin-bottom: 6px; font-size: 12px; color: #475569;">
+                            <span><strong>Otázka ${idx + 1} z ${questions.length}</strong> | ${q.kategorie}</span>
+                            <span>${statusBadge}</span>
+                        </div>
+                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 8px; color: #0f172a;">${q.otazka}</div>
+                        <div style="font-size: 12px; margin-bottom: 6px;">
+                            ${q.moznosti.map((opt, i) => {
+                                let style = "padding: 4px 8px; margin: 2px 0; border-radius: 4px;";
+                                if (i === q.spravnaIndex) {
+                                    style += " background-color: #d1fae5; color: #065f46; font-weight: bold;";
+                                } else if (i === userAns) {
+                                    style += " background-color: #ffe4e6; color: #9f1239;";
+                                } else {
+                                    style += " color: #475569;";
+                                }
+                                return `<div style="${style}">${labels[i]}) ${opt}</div>`;
+                            }).join('')}
+                        </div>
+                        <div style="font-size: 11px; color: #334155; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #cbd5e1;">
+                            <strong>Citace z materiálu:</strong> "${q.citace}"
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = `
+                <div style="border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 20px;">
+                    <h1 style="font-size: 22px; font-weight: bold; color: #0f172a; margin: 0;">TISKOVÝ PROTOKOL TESTU ÚČETNICTVÍ</h1>
+                    <h2 style="font-size: 16px; color: #0284c7; margin: 4px 0 0 0;">Téma: Účetní závěrka</h2>
+                    <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Vygenerováno: ${dateStr}</div>
+                </div>
+
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 13px;">
+                    <tr style="background-color: #f8fafc;">
+                        <td style="padding: 8px; border: 1px solid #cbd5e1;"><strong>Celkem otázek:</strong> ${questions.length}</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e1;"><strong>Správné odpovědi:</strong> ${correctCount}</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e1;"><strong>Úspěšnost:</strong> ${pct} %</td>
+                        <td style="padding: 8px; border: 1px solid #cbd5e1;"><strong>Známka (OA):</strong> <span style="font-size: 16px; font-weight: bold;">${grade} (${gradeLabel})</span></td>
+                    </tr>
+                </table>
+
+                <h3 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #0f172a;">Detailní přehled otázek a odpovědí:</h3>
+                ${questionsListHTML}
+            `;
+        }
+    </script>
+</body>
+</html>
